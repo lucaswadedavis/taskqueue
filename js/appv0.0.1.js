@@ -1,6 +1,7 @@
 $(document).ready(function(){
 	app.c.init();
 	app.v.init();
+	app.v.listeners();
 })
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -30,6 +31,36 @@ app.c.users=function(x){
 		app.m.users.push(davis.randomWord());
 	}
 }
+
+app.c.mockData=function(c,d){
+	var c=c||4;
+	var d=d||15;
+	var r=[];
+	var rd=[];
+	rr={};
+	var moveAround=function(a){
+		var extract=a.splice(davis.random(a.length),1)[0];
+		a.splice(davis.random(a.length),0,extract);
+		a=a.slice();
+		return a;
+	};
+	for (var i=0;i<c;i++){
+		r.push(davis.randomWord());
+		rd.push(i);
+		rr[r[i]]=[rd[i]];
+	}
+	for (var i=0;i<d;i++){
+		rd=moveAround(rd);
+		var k=0;
+		for (var j in rr){
+			rr[j].push(rd[k]);
+			k++;
+		}
+	}
+	rr=_.pairs(rr);
+	return rr;
+	//returns an object where the keys are the lines and the values are arrays of rank data
+};
 
 app.c.tasks=function(x){
 	var x=x||10;
@@ -94,7 +125,7 @@ app.v.layout=function(){
 			d+="</td>";
 			d+="<td colspan='7' id='area-tasks'>";
 				d+="<h1>"+app.m.metadata.title.toLowerCase()+"</h1>";
-				d+="<p id='selected-user'>lwdavis</p>";
+				d+="<p id='selected-user'>lwdavis<br/><span id='show-graph'>show graph</span></p>";
 				d+=app.v.tasks();
 			d+="</td>";
 		d+="</tr>";
@@ -102,6 +133,49 @@ app.v.layout=function(){
 	d+="</div>";
 	return d;
 };
+
+app.v.listeners=function(){
+	$("span#show-graph").click(function(){
+			$(this).html("<div id='queue-graph' class='wrapper'></div>");
+			app.v.queueGraph("#queue-graph");
+	})
+};
+
+app.v.queueGraph=function(target,data){
+	var target=target || "#queue-graph";
+	$(target).css("height","300px");
+	var data=data || app.c.mockData(_.random(4,20),_.random(5,17));
+	dataDump=data;
+	var b={};
+	b.width=$(target).innerWidth();
+	b.height=$(target).innerHeight();
+	var c=new Raphael(target.slice(1));
+	var y=10;
+	var yInterval=(b.height/data.length);
+	var xInterval=b.width/(2*data[0][1].length);
+	var strokeWidth=Math.round(yInterval/4);
+	for (var i=0;i<data.length;i++){
+		var x=0;
+		y=10+data[i][1][0]*yInterval;
+		var path="M "+x+" "+y+" ";
+		//x=x+(xInterval/4);
+		path+=" S "+x+" "+y+" ";
+		x=x+(xInterval/2);
+		path+=" "+x+" "+y+" ";
+		for (var j=0;j<data[i][1].length;j++){
+			var y=10+data[i][1][j]*yInterval;
+			console.log(i+" "+j+" "+y);
+			var x=x+(xInterval/2);
+			path+=" S "+x+" "+y+" ";
+			x=x+(4*xInterval/3);
+			path+="  "+x+" "+y+" ";
+		}
+		x=b.width;
+		path+=" L "+x+" "+y+" ";
+		var line=c.path(path).attr({"stroke-width":strokeWidth,"stroke":davis.randomColor()});
+		y=y+yInterval;
+	}
+}
 
 app.v.style=function(){
 	davis.style("body",{
@@ -219,4 +293,7 @@ app.v.style=function(){
 		"padding-right":"30px",
 		"color":app.m.colors.lightGrey
 	});
+	davis.style("span#show-graph",{
+		"cursor":"pointer"
+	})
 };
