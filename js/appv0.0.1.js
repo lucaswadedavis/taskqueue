@@ -173,6 +173,25 @@ app.v.queueGraph=function(target,data){
 		x=b.width;
 		path+=" L "+x+" "+y+" ";
 		var line=c.path(path).attr({"stroke-width":strokeWidth,"stroke":davis.randomColor()});
+		line.mouseover(function(){
+
+			if (!this.data("backboard") ){
+				var backboard=c.path(this.attr("path") )
+					.attr({"stroke":"#000","stroke-width":this.attr("stroke-width")*2});
+				this.data("backboard",backboard);
+				}
+			else{
+				var backboard=this.data("backboard");
+				backboard.attr({"opacity":1});
+			}
+			backboard.toFront();
+			this.toFront();	
+			
+		});
+		line.mouseout(function(){
+			var backboard=this.data("backboard");
+			backboard.animate({"opacity":0},300);
+		})
 		y=y+yInterval;
 	}
 }
